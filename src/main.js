@@ -19,7 +19,6 @@ const gallery = document.querySelector('.gallery');
 let currentQuery = '';
 let currentPage = 1;
 const perPage = 20;
-let totalHits = 0;
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
@@ -46,15 +45,14 @@ form.addEventListener('submit', async event => {
     if (data.hits.length === 0) {
       iziToast.info({
         title: 'Sorry',
-        message:
-          ', there are no images matching your search query. Please try again!',
+        message: 'there are no images matching your search query. Please try again!',
         position: 'topRight',
       });
       return;
     }
 
     createGallery(data.hits);
-    
+
     if (data.totalHits > perPage) {
       showLoadMoreButton();
     } else {
@@ -64,29 +62,31 @@ form.addEventListener('submit', async event => {
         position: 'bottomCenter',
       });
     }
-    } catch (error) {
+  } catch (error) {
     iziToast.error({
       title: 'Error',
       message: 'Something went wrong. Please try again later.',
       position: 'topRight',
     });
-    } finally {
+  } finally {
     hideLoader();
   }
 });
 
 loadMoreBtn.addEventListener('click', async () => {
   currentPage += 1;
+  hideLoadMoreButton();
   showLoader();
 
   try {
-    const data = await getImagesByQuery(currentPage, perPage, currentQuery);
+    const data = await getImagesByQuery(currentQuery, currentPage, perPage);
     createGallery(data.hits);
+    showLoadMoreButton();
 
     const { height: cardHeight } = gallery.firstElementChild.getBoundingClientRect();
     window.scrollBy({
       top: cardHeight * 2,
-      behaviour: 'smooth',
+      behavior: 'smooth',
     });
 
     const totalLoaded = gallery.children.length;
@@ -96,14 +96,17 @@ loadMoreBtn.addEventListener('click', async () => {
         message: "We're sorry, but you've reached the end of the search results.",
         position: 'bottomCenter',
       });
+    } else {
+      showLoadMoreButton();
     }
   } catch (error) {
     iziToast.error({
       title: 'Error',
-      message: 'Somethimg went wrong. Please try again later.',
+      message: 'Something went wrong. Please try again later.',
       position: 'topRight',
     });
   } finally {
     hideLoader();
   }
-})
+});
+
